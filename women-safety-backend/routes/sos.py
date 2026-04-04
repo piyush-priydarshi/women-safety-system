@@ -1,8 +1,23 @@
+import requests
 from flask import Blueprint, request, jsonify, g
 from auth_utils import login_required, get_db
 from alert_service import send_sos_alerts
+from datetime import datetime
 
 sos_bp = Blueprint('sos', __name__)
+
+
+# 🔥 TELEGRAM FUNCTION
+def send_telegram_alert(message):
+    token = "8125973498:AAG6BkXEjAWjwaSEvO-XzdaolJmMtny-MZA"
+    chat_id = "1895703688"
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+
+    requests.post(url, json={
+        "chat_id": chat_id,
+        "text": message
+    })
 
 
 @sos_bp.route('/trigger', methods=['POST'])
@@ -21,6 +36,7 @@ def trigger_sos():
         "SELECT id FROM sos_events WHERE user_id = ? AND status = 'active'",
         (g.user_id,)
     ).fetchone()
+
     if active:
         return jsonify({
             "error": "An active SOS is already in progress",
@@ -38,8 +54,41 @@ def trigger_sos():
         (g.user_id,)
     ).fetchone()
 
-    # Fire mock alerts to all emergency contacts
+    # Fire mock alerts
     alerts_sent = send_sos_alerts(db, g.user_id, sos['id'], latitude, longitude, address)
+
+    # 🔥 FETCH USER DETAILS
+    user = db.execute(
+        "SELECT name, phone FROM users WHERE id = ?",
+        (g.user_id,)
+    ).fetchone()
+
+    name = user['name'] if user and user['name'] else "Unknown"
+    phone = user['phone'] if user and user['phone'] else "N/A"
+
+    # 🔥 SAFE LOCATION
+    lat = latitude if latitude else "12.9667"
+    lng = longitude if longitude else "77.7104"
+
+    # 🔥 TIME FORMAT
+    time_now = datetime.now().strftime("%d %b %Y, %I:%M %p")
+
+    # 🔥 TELEGRAM ALERT (IMPROVED)
+    send_telegram_alert(
+        f"""🚨 EMERGENCY ALERT 🚨
+
+👤 Name: {name}
+📞 Phone: {phone}
+🆔 User ID: {g.user_id}
+
+📍 Location:
+https://maps.google.com/?q={lat},{lng}
+
+🕒 Time: {time_now}
+⚠ Status: SOS ACTIVE
+"""
+    )
+
     db.commit()
 
     return jsonify({
@@ -52,12 +101,13 @@ def trigger_sos():
 @sos_bp.route('/cancel', methods=['POST'])
 @login_required
 def cancel_sos():
-    """Cancel the currently active SOS event."""
     db = get_db()
+
     sos = db.execute(
         "SELECT * FROM sos_events WHERE user_id = ? AND status = 'active'",
         (g.user_id,)
     ).fetchone()
+
     if not sos:
         return jsonify({"error": "No active SOS found"}), 404
 
@@ -67,21 +117,27 @@ def cancel_sos():
     )
     db.commit()
 
-    sos = db.execute("SELECT * FROM sos_events WHERE id = ?", (sos['id'],)).fetchone()
+    sos = db.execute(
+        "SELECT * FROM sos_events WHERE id = ?",
+        (sos['id'],)
+    ).fetchone()
+
     return jsonify({"message": "SOS cancelled", "sos": _serialize_sos(sos)})
 
 
 @sos_bp.route('/resolve/<int:sos_id>', methods=['POST'])
 @login_required
 def resolve_sos(sos_id):
-    """Mark an SOS as resolved (e.g., by a responder or admin)."""
-    db  = get_db()
+    db = get_db()
+
     sos = db.execute(
         "SELECT * FROM sos_events WHERE id = ? AND user_id = ?",
         (sos_id, g.user_id)
     ).fetchone()
+
     if not sos:
         return jsonify({"error": "SOS not found"}), 404
+
     if sos['status'] != 'active':
         return jsonify({"error": f"SOS is already '{sos['status']}'"}), 400
 
@@ -90,38 +146,45 @@ def resolve_sos(sos_id):
         (sos_id,)
     )
     db.commit()
-    sos = db.execute("SELECT * FROM sos_events WHERE id = ?", (sos_id,)).fetchone()
+
+    sos = db.execute(
+        "SELECT * FROM sos_events WHERE id = ?",
+        (sos_id,)
+    ).fetchone()
+
     return jsonify({"message": "SOS resolved", "sos": _serialize_sos(sos)})
 
 
 @sos_bp.route('/history', methods=['GET'])
 @login_required
 def sos_history():
-    """Return the SOS history for the logged-in user."""
-    db   = get_db()
+    db = get_db()
+
     rows = db.execute(
         "SELECT * FROM sos_events WHERE user_id = ? ORDER BY triggered_at DESC",
         (g.user_id,)
     ).fetchall()
+
     return jsonify({"history": [_serialize_sos(r) for r in rows]})
 
 
 @sos_bp.route('/active', methods=['GET'])
 @login_required
 def active_sos():
-    db  = get_db()
+    db = get_db()
+
     sos = db.execute(
         "SELECT * FROM sos_events WHERE user_id = ? AND status = 'active'",
         (g.user_id,)
     ).fetchone()
+
     if not sos:
         return jsonify({"active": False, "sos": None})
+
     return jsonify({"active": True, "sos": _serialize_sos(sos)})
 
 
-# ── helpers ──────────────────────────────────────────────────────────────────
-
-def _serialize_sos(row) -> dict:
+def _serialize_sos(row):
     return {
         "id":           row['id'],
         "user_id":      row['user_id'],
