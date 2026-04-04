@@ -74,9 +74,13 @@ export default function Dashboard() {
         }}>
           <SosSystem 
             onTrigger={() => {
-              addLog('SOS TRIGGERED - ALERT SENT', 'danger');
+              addLog('SOS TRIGGERED - SEQUENCE INITIATED', 'danger');
               setSystemState('ALERT');
             }} 
+            onCancel={() => {
+              setSystemState('NORMAL');
+            }}
+            onLog={addLog}
             onError={(err) => {
               addLog(`SOS FAILED: ${err}`, 'danger');
             }}

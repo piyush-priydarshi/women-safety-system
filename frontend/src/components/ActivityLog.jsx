@@ -6,7 +6,7 @@ export default function ActivityLog({ logs, systemState }) {
 
   useEffect(() => {
     if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      containerRef.current.scrollTop = 0;
     }
   }, [logs]);
 
@@ -33,7 +33,7 @@ export default function ActivityLog({ logs, systemState }) {
           flex: 1, 
           overflowY: 'auto', 
           display: 'flex', 
-          flexDirection: 'column-reverse', 
+          flexDirection: 'column', 
           gap: '0.5rem',
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: '0.8rem'

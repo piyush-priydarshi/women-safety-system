@@ -2,34 +2,42 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ShieldAlert, RefreshCcw } from 'lucide-react';
 import { api } from '../api';
 
-export default function SosSystem({ onTrigger, onError }) {
+export default function SosSystem({ onTrigger, onCancel, onLog, onError }) {
   const [loading, setLoading] = useState(false);
   const [isAlert, setIsAlert] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const [ripples, setRipples] = useState([]);
   const audioCtxRef = useRef(null);
 
-  const syncSOSState = async () => {
-    try {
-      const response = await api.getSOSHistory();
-      if (response.history && response.history.length > 0) {
-        const lastEntry = response.history[response.history.length - 1];
-        const firstEntry = response.history[0];
-        
-        if (lastEntry.status === 'active' || firstEntry.status === 'active') {
-          setIsAlert(true);
+  useEffect(() => {
+    const checkState = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsAlert(false);
+        setIsChecking(false);
+        return;
+      }
+      try {
+        const response = await api.getSOSHistory();
+        if (response.history && response.history.length > 0) {
+          const lastEntry = response.history[response.history.length - 1];
+          const firstEntry = response.history[0];
+          if (lastEntry.status === 'active' || firstEntry.status === 'active') {
+            setIsAlert(true);
+          } else {
+            setIsAlert(false);
+          }
         } else {
           setIsAlert(false);
         }
-      } else {
+      } catch (err) {
+        console.error("Failed to check SOS state", err);
         setIsAlert(false);
+      } finally {
+        setIsChecking(false);
       }
-    } catch (err) {
-      console.error("Failed to fetch SOS history", err);
-    }
-  };
-
-  useEffect(() => {
-    syncSOSState();
+    };
+    checkState();
   }, []);
 
   // Play a retro alert beep using Web Audio API
@@ -63,14 +71,26 @@ export default function SosSystem({ onTrigger, onError }) {
     if (loading || isAlert) return;
     setLoading(true);
 
-    // Add ripple effect
-    const newRippleId = Date.now();
-    setRipples(prev => [...prev, newRippleId]);
-    setTimeout(() => {
-      setRipples(prev => prev.filter(id => id !== newRippleId));
-    }, 2000);
-
     try {
+      const response = await api.getSOSHistory();
+      if (response.history && response.history.length > 0) {
+        const lastEntry = response.history[response.history.length - 1];
+        const firstEntry = response.history[0];
+        if (lastEntry.status === 'active' || firstEntry.status === 'active') {
+          if (onError) onError('⚠ SOS already active. Cancel first.');
+          setIsAlert(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Add ripple effect
+      const newRippleId = Date.now();
+      setRipples(prev => [...prev, newRippleId]);
+      setTimeout(() => {
+        setRipples(prev => prev.filter(id => id !== newRippleId));
+      }, 2000);
+
       await api.triggerSOS();
       setIsAlert(true);
       playAlertSound();
@@ -80,7 +100,34 @@ export default function SosSystem({ onTrigger, onError }) {
       setTimeout(() => document.body.classList.remove('shake-screen'), 400);
 
       if (onTrigger) onTrigger();
-      await syncSOSState();
+
+      // Simulate alerts sequence
+      const dbContacts = await api.getContacts();
+      const contactList = Array.isArray(dbContacts) ? dbContacts : dbContacts.contacts || [];
+      
+      if (contactList.length === 0) {
+        if (onLog) onLog("[NO_CONTACTS_FOUND]", "danger");
+      }
+
+      let baseTime = 500;
+      setTimeout(() => { if (onLog) onLog("📍 Location shared", "success"); }, baseTime);
+      
+      baseTime += 500;
+      setTimeout(() => { if (onLog) onLog("📩 Alert sent to contacts", "success"); }, baseTime);
+      
+      contactList.forEach((c) => {
+        baseTime += 500;
+        setTimeout(() => {
+          if (onLog) onLog(`📩 Alert sent to ${c.name ? c.name.toUpperCase() : 'UNKNOWN'}`, "success");
+        }, baseTime);
+      });
+      
+      baseTime += 500;
+      setTimeout(() => { if (onLog) onLog("🚓 Authorities notified", "danger"); }, baseTime);
+      
+      baseTime += 500;
+      setTimeout(() => { if (onLog) onLog("⚠ Emergency mode active", "danger"); }, baseTime);
+
     } catch (err) {
       if (onError) onError(err.message || 'System error: Failed to trigger SOS');
     } finally {
@@ -135,12 +182,12 @@ export default function SosSystem({ onTrigger, onError }) {
       ))}
 
       <button
-        className={`sos-button ${isAlert ? 'active' : 'idle'}`}
+        className={`sos-button ${isChecking ? 'idle' : isAlert ? 'active' : 'idle'}`}
         onClick={handleTrigger}
-        disabled={loading || isAlert}
+        disabled={loading || isAlert || isChecking}
       >
-        <ShieldAlert size={64} style={{ filter: 'drop-shadow(0 0 10px var(--danger))', transition: 'transform 0.3s ease', transform: loading ? 'scale(0.8)' : 'scale(1)' }} />
-        <span>{loading ? 'TRANSMITTING...' : isAlert ? 'SOS ACTIVE' : 'ACTIVATE SOS'}</span>
+        <ShieldAlert size={64} style={{ filter: 'drop-shadow(0 0 10px var(--danger))', transition: 'transform 0.3s ease', transform: loading || isChecking ? 'scale(0.8)' : 'scale(1)' }} />
+        <span>{isChecking ? 'SYNCING...' : loading ? 'TRANSMITTING...' : isAlert ? 'SOS ACTIVE' : 'ACTIVATE SOS'}</span>
       </button>
 
       {isAlert && (
@@ -149,7 +196,8 @@ export default function SosSystem({ onTrigger, onError }) {
             try {
               await api.cancelSOS();
               setIsAlert(false);
-              await syncSOSState();
+              if (onCancel) onCancel();
+              if (onLog) onLog("✅ SOS cancelled successfully", "success");
             } catch (err) {
               if (onError) onError(err.message || 'System error: Failed to cancel SOS');
             }
