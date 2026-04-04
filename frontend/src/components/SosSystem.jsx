@@ -4,9 +4,33 @@ import { api } from '../api';
 
 export default function SosSystem({ onTrigger, onError }) {
   const [loading, setLoading] = useState(false);
-  const [isAlert, setIsAlert] = useState(true);
+  const [isAlert, setIsAlert] = useState(false);
   const [ripples, setRipples] = useState([]);
   const audioCtxRef = useRef(null);
+
+  const syncSOSState = async () => {
+    try {
+      const response = await api.getSOSHistory();
+      if (response.history && response.history.length > 0) {
+        const lastEntry = response.history[response.history.length - 1];
+        const firstEntry = response.history[0];
+        
+        if (lastEntry.status === 'active' || firstEntry.status === 'active') {
+          setIsAlert(true);
+        } else {
+          setIsAlert(false);
+        }
+      } else {
+        setIsAlert(false);
+      }
+    } catch (err) {
+      console.error("Failed to fetch SOS history", err);
+    }
+  };
+
+  useEffect(() => {
+    syncSOSState();
+  }, []);
 
   // Play a retro alert beep using Web Audio API
   const playAlertSound = () => {
@@ -55,9 +79,10 @@ export default function SosSystem({ onTrigger, onError }) {
       document.body.classList.add('shake-screen');
       setTimeout(() => document.body.classList.remove('shake-screen'), 400);
 
-      onTrigger();
+      if (onTrigger) onTrigger();
+      await syncSOSState();
     } catch (err) {
-      onError(err.message || 'Network failure');
+      if (onError) onError(err.message || 'System error: Failed to trigger SOS');
     } finally {
       setLoading(false);
     }
@@ -122,34 +147,18 @@ export default function SosSystem({ onTrigger, onError }) {
         <button
           onClick={async () => {
             try {
-              await api.cancelSOS();   // 👈 backend call
-              setIsAlert(false);       // 👈 reset UI
-            } catch (err) {
-              onError(err.message || 'Failed to cancel SOS');
-            }
-          }}
-          className="cyber-button"
-          style={{ fontSize: '0.8rem', padding: '0.5rem', marginTop: '1rem' }}
-        >
-          CANCEL SOS
-        </button>
-      )}
-
-      {isAlert && (
-        <button
-          onClick={async () => {
-            try {
               await api.cancelSOS();
               setIsAlert(false);
+              await syncSOSState();
             } catch (err) {
-              onError(err.message || 'Failed to reset SOS');
+              if (onError) onError(err.message || 'System error: Failed to cancel SOS');
             }
           }}
           className="cyber-button fade-in"
           style={{ fontSize: '0.8rem', padding: '0.5rem', marginTop: '1rem' }}
         >
           <RefreshCcw size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px' }} />
-          RESET_STATUS
+          CANCEL SOS
         </button>
       )}
 

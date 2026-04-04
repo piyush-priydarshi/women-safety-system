@@ -11,10 +11,11 @@ export default function ContactsPanel({ onContactAdded, onContactRemoved }) {
   const fetchContacts = async () => {
     try {
       const res = await api.getContacts();
+      console.log("[CONTACTS API]", res);
       setContacts(Array.isArray(res) ? res : res.contacts || []);
     } catch (err) {
-      console.error(err);
-      setError('Failed to load contacts');
+      console.error("[CONTACTS API ERROR]", err);
+      setError(err.message || 'Failed to load contacts');
     }
   };
 

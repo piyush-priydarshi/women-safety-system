@@ -12,12 +12,30 @@ const request = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    console.error("Network Error:", error);
+    throw new Error('Network failure. Please check your connection.');
+  }
 
-  const data = await response.json();
+  if (response.status === 401 || response.status === 403) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/auth';
+    throw new Error('Session expired, please login again');
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (err) {
+    throw new Error('Invalid response format');
+  }
 
   if (!response.ok) {
     throw new Error(data.message || data.error || 'Something went wrong');
@@ -43,8 +61,13 @@ export const api = {
   triggerSOS: () => request('/api/sos/trigger', {
     method: 'POST',
   }),
+  getSOSHistory: () => request('/api/sos/history'),
   cancelSOS: () => request('/api/sos/cancel', {
     method: 'POST',
+  }),
+  updateLocation: (coords) => request('/api/location/update', {
+    method: 'POST',
+    body: JSON.stringify(coords),
   }),
   removeContact: (id) => request(`/api/contacts/${id}`, {
     method: 'DELETE',
