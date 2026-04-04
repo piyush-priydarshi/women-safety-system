@@ -50,51 +50,66 @@ export default function Dashboard() {
   };
 
   const addLog = (message, type = 'info') => {
-    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setLogs(prev => [{ id: Date.now() + Math.random(), message, type, timestamp }, ...prev].slice(0, 50));
+    // Clean old emojis if present to avoid doubling
+    let cleanMessage = message.replace(/^(📍|📩|🚓|⚠|✅|🚨|📞|⚙️)\s*/, '');
+    if (message === '[NO_CONTACTS_FOUND]') cleanMessage = 'NO CONTACTS FOUND';
 
-    if (message === 'SOS TRIGGERED - SEQUENCE INITIATED') {
-      addToast('⚠ SOS Activated', 'danger');
+    let icon = 'ℹ️';
+    const lower = cleanMessage.toLowerCase();
+    if (lower.includes('location') || lower.includes('geo')) icon = '📍';
+    else if (lower.includes('sos') || lower.includes('emergency')) icon = '🚨';
+    else if (lower.includes('alert') || lower.includes('authorities') || lower.includes('contact')) icon = '📞';
+    else if (cleanMessage === 'SYSTEM INITIALIZED') icon = '⚙️';
+
+    const displayMessage = `${icon} ${cleanMessage}`;
+    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setLogs(prev => [{ id: Date.now() + Math.random(), message: displayMessage, type, timestamp }, ...prev].slice(0, 50));
+
+    if (cleanMessage === 'SOS TRIGGERED - SEQUENCE INITIATED') {
+      addToast('🚨 SOS Activated', 'danger');
     } else if (
-      message.includes('Authorities notified') || 
-      message.includes('SOS cancelled')
+      cleanMessage.includes('Authorities notified') || 
+      cleanMessage.includes('SOS cancelled')
     ) {
-      addToast(message, type);
+      addToast(displayMessage, type);
     }
   };
 
   if (!user) return <div style={{ color: 'var(--neon-blue)', padding: '2rem' }}>Loading system...</div>;
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '1fr 350px',
-      gap: '2rem',
-      padding: '2rem',
-      maxWidth: '1600px',
-      margin: '0 auto',
-      minHeight: '100vh',
-    }}>
+    <div className="dashboard-wrapper">
+      {/* Red Glow Overlay for EMERGENCY MODE */}
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: systemState === 'ALERT' ? 'radial-gradient(circle at center, transparent 0%, rgba(255, 0, 60, 0.15) 100%)' : 'none',
+        boxShadow: systemState === 'ALERT' ? 'inset 0 0 150px rgba(255, 0, 60, 0.4)' : 'none',
+        pointerEvents: 'none',
+        zIndex: -1,
+        transition: 'all 0.5s ease',
+        opacity: systemState === 'ALERT' ? 1 : 0
+      }} />
+
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       
-      {/* LEFT COLUMN: Main Interaction */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        
-        {/* Header / User Panel */}
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <UserPanel user={user} systemState={systemState} onLogout={handleLogout} />
-          <LocationPanel />
-        </header>
+      {/* TOP ROW: Responsive Dashboard Cards */}
+      <div className="dashboard-top-row">
+        <UserPanel user={user} systemState={systemState} onLogout={handleLogout} />
+        <LocationPanel />
+        <ContactsPanel 
+          onContactAdded={(name) => addLog(`CONTACT ADDED: ${name}`, 'success')} 
+          onContactRemoved={(name) => addLog(`CONTACT REMOVED: ${name}`, 'danger')}
+        />
+      </div>
 
+      {/* BOTTOM ROW: Centered SOS Block & Activity Log */}
+      <div className="dashboard-bottom-row">
+        
         {/* SOS Center */}
-        <main style={{ 
-          flex: 1, 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          minHeight: '400px'
-        }}>
-          <SosSystem 
+        <main className="dashboard-sos-main">
+          <div className="sos-container">
+            <SosSystem 
             onTrigger={() => {
               addLog('SOS TRIGGERED - SEQUENCE INITIATED', 'danger');
               setSystemState('ALERT');
@@ -107,23 +122,15 @@ export default function Dashboard() {
               addLog(`SOS FAILED: ${err}`, 'danger');
             }}
           />
+          </div>
         </main>
-        
-      </div>
 
-      {/* RIGHT COLUMN: Data & Logs */}
-      <aside style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        
-        <ContactsPanel 
-          onContactAdded={(name) => addLog(`CONTACT ADDED: ${name}`, 'success')} 
-          onContactRemoved={(name) => addLog(`CONTACT REMOVED: ${name}`, 'danger')}
-        />
-        
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '300px' }}>
+        {/* RIGHT COLUMN: Logs */}
+        <aside className="dashboard-logs-aside">
           <ActivityLog logs={logs} systemState={systemState} />
-        </div>
+        </aside>
 
-      </aside>
+      </div>
 
     </div>
   );

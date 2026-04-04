@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Activity } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { api } from '../api';
+
+// Create custom neon pulse icon for the map marker
+const neonIcon = L.divIcon({
+  className: 'custom-neon-marker',
+  html: '<div class="neon-pulse-ring"></div><div class="neon-pulse-dot"></div>',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
+
+// Component to auto-center the map when coordinates change dynamically
+function ChangeView({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
 
 export default function LocationPanel() {
   const [coords, setCoords] = useState({ lat: 0, lng: 0 });
@@ -69,7 +89,7 @@ export default function LocationPanel() {
   }, []);
 
   return (
-    <div className="terminal-card" style={{ padding: '1rem', minWidth: '250px' }}>
+    <div className="terminal-card" style={{ height: '350px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--neon-blue)' }}>
         <MapPin size={16} />
         <span style={{ fontSize: '0.85rem', fontFamily: 'Orbitron' }}>GEO.TRACKER</span>
@@ -98,11 +118,50 @@ export default function LocationPanel() {
               width: '6px', height: '6px', borderRadius: '50%', 
               background: status === 'ACTIVE' ? '#00ff88' : (status === 'NO SIGNAL' ? 'var(--danger)' : 'var(--neon-blue)'), 
               boxShadow: `0 0 5px ${status === 'ACTIVE' ? '#00ff88' : (status === 'NO SIGNAL' ? 'var(--danger)' : 'var(--neon-blue)')}`, 
-              animation: status === 'ACTIVE' ? 'alertPulse 2s infinite' : 'none' 
-            }}></span>
+              animation: status === 'ACTIVE' ? 'alertPulse 2s infinite' : 'none'
+            }} />
             {status}
           </span>
         </div>
+        
+        {/* Live Map Render */}
+        <div style={{ marginTop: '1.5rem', width: '100%', position: 'relative', zIndex: 1 }}>
+          <h4 style={{ 
+            color: 'var(--neon-blue)', 
+            fontFamily: 'Orbitron', 
+            fontSize: '0.85rem', 
+            marginBottom: '0.75rem',
+            textAlign: 'center',
+            textShadow: '0 0 5px var(--neon-blue)'
+          }}>📍 LIVE LOCATION</h4>
+          <div className="map-container" style={{ 
+            height: '200px', 
+            width: '100%', 
+            borderRadius: '10px', 
+            overflow: 'hidden', 
+            border: '1px solid var(--neon-blue)',
+            boxShadow: '0 0 10px rgba(76, 201, 240, 0.2)'
+          }}>
+          <MapContainer 
+            center={[coords.lat || 12.9716, coords.lng || 77.5946]} 
+            zoom={16} 
+            style={{ height: '100%', width: '100%' }} 
+            zoomControl={false} 
+            dragging={false} 
+            scrollWheelZoom={false}
+          >
+            <TileLayer
+              attribution='&copy; OpenStreetMap'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {status === "ACTIVE" && (
+              <Marker position={[coords.lat, coords.lng]} icon={neonIcon}></Marker>
+            )}
+            <ChangeView center={[coords.lat || 12.9716, coords.lng || 77.5946]} />
+          </MapContainer>
+          </div>
+        </div>
+
       </div>
     </div>
   );

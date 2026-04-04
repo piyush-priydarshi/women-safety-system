@@ -64,7 +64,7 @@ export default function ContactsPanel({ onContactAdded, onContactRemoved }) {
   };
 
   return (
-    <div className="terminal-card" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+    <div className="terminal-card" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', borderBottom: '1px solid var(--neon-blue)', paddingBottom: '0.5rem' }}>
         <Users size={18} className="text-blue" />
         <h3 style={{ margin: 0, color: 'var(--neon-blue)', fontSize: '1rem' }}>
@@ -72,7 +72,7 @@ export default function ContactsPanel({ onContactAdded, onContactRemoved }) {
         </h3>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto', marginBottom: '1rem', maxHeight: '200px' }} className="fade-in">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflowY: 'auto', marginBottom: '1rem' }} className="fade-in">
         {contacts.length === 0 ? (
           <div className="text-dim fade-in" style={{ fontSize: '0.85rem' }}>[NO_CONTACTS_FOUND]</div>
         ) : (

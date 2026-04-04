@@ -341,4 +341,136 @@ h1 {
     width: 100%;
     max-width: 100%;
   }
+  .sos-container {
+    transform: scale(0.75);
+  }
+}
+
+/* Dashboard Responsive Layout System */
+.dashboard-wrapper {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-top-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-bottom-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.dashboard-sos-main {
+  grid-column: 1 / span 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.dashboard-logs-aside {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+/* Tablet Layout (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .dashboard-top-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dashboard-bottom-row {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-sos-main {
+    grid-column: 1;
+    min-height: auto;
+  }
+}
+
+/* Mobile Layout (max-width: 768px) */
+@media (max-width: 768px) {
+  .dashboard-wrapper {
+    padding: 1rem;
+  }
+  .dashboard-top-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .dashboard-bottom-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .dashboard-sos-main {
+    grid-column: 1;
+    min-height: auto;
+    margin-bottom: 1rem;
+  }
+  .dashboard-logs-aside {
+    min-height: auto;
+  }
+  .terminal-card {
+    min-width: unset !important;
+    height: auto !important; /* Allow internal items to wrap */
+  }
+  .map-container {
+    height: 180px !important;
+  }
+}
+
+/* Leaflet Map Cyber Theme Integration */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  background: var(--bg-color);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.leaflet-layer,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-control-attribution {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+.custom-neon-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.neon-pulse-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background-color: #00ff88;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+  z-index: 2;
+}
+
+.neon-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border: 2px solid #00ff88;
+  border-radius: 50%;
+  animation: rippleWave 1.5s cubic-bezier(0.25, 0.8, 0.25, 1) infinite;
+  z-index: 1;
 }

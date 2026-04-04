@@ -3,7 +3,7 @@ import { User, LogOut, Terminal, Activity } from 'lucide-react';
 
 export default function UserPanel({ user, systemState, onLogout }) {
   return (
-    <div className={`terminal-card ${systemState === 'ALERT' ? 'terminal-card-danger' : ''}`} style={{ minWidth: '300px' }}>
+    <div className={`terminal-card ${systemState === 'ALERT' ? 'terminal-card-danger' : ''}`} style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', borderBottom: `1px solid ${systemState === 'ALERT' ? 'var(--danger)' : 'var(--neon-blue)'}`, paddingBottom: '0.5rem' }}>
         <Terminal size={18} className={systemState === 'ALERT' ? 'text-danger' : 'text-blue'} />
         <h3 style={{ margin: 0, color: systemState === 'ALERT' ? 'var(--danger)' : 'var(--neon-blue)', fontSize: '1rem' }}>

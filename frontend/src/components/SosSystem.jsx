@@ -41,6 +41,17 @@ export default function SosSystem({ onTrigger, onCancel, onLog, onError }) {
     checkState();
   }, []);
 
+  useEffect(() => {
+    const favicon = document.getElementById("favicon");
+    const faviconApple = document.getElementById("favicon-apple");
+    if (favicon) {
+      favicon.href = isAlert ? "/favicon-alert.png" : "/favicon-normal.png";
+    }
+    if (faviconApple) {
+      faviconApple.href = isAlert ? "/favicon-alert.png" : "/favicon-normal.png";
+    }
+  }, [isAlert]);
+
   // Play a retro alert beep using Web Audio API
   const playAlertSound = () => {
     if (!audioCtxRef.current) {
@@ -194,9 +205,19 @@ export default function SosSystem({ onTrigger, onCancel, onLog, onError }) {
       </button>
 
       {isAlert && (
-        <button
-          onClick={async () => {
-            if (cancelLoading) return;
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}>
+          <h3 className="fade-in" style={{
+            color: 'var(--danger)',
+            fontFamily: 'Orbitron',
+            textShadow: '0 0 10px var(--danger)',
+            marginBottom: '0.5rem',
+            animation: 'alertPulse 2s infinite'
+          }}>
+            ⚠ EMERGENCY MODE ACTIVE
+          </h3>
+          <button
+            onClick={async () => {
+              if (cancelLoading) return;
             setCancelLoading(true);
             try {
               await api.cancelSOS();
@@ -212,10 +233,11 @@ export default function SosSystem({ onTrigger, onCancel, onLog, onError }) {
           disabled={cancelLoading}
           className="cyber-button fade-in"
           style={{ fontSize: '0.8rem', padding: '0.5rem', marginTop: '1rem', cursor: cancelLoading ? 'wait' : 'pointer' }}
-        >
-          <RefreshCcw size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px' }} />
-          {cancelLoading ? 'CANCELLING...' : 'CANCEL SOS'}
-        </button>
+          >
+            <RefreshCcw size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px' }} />
+            {cancelLoading ? 'CANCELLING...' : 'CANCEL SOS'}
+          </button>
+        </div>
       )}
 
     </div>
