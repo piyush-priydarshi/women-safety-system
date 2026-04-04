@@ -6,6 +6,7 @@ export default function SosSystem({ onTrigger, onCancel, onLog, onError }) {
   const [loading, setLoading] = useState(false);
   const [isAlert, setIsAlert] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [ripples, setRipples] = useState([]);
   const audioCtxRef = useRef(null);
 
@@ -83,6 +84,8 @@ export default function SosSystem({ onTrigger, onCancel, onLog, onError }) {
           return;
         }
       }
+
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       // Add ripple effect
       const newRippleId = Date.now();
@@ -193,6 +196,8 @@ export default function SosSystem({ onTrigger, onCancel, onLog, onError }) {
       {isAlert && (
         <button
           onClick={async () => {
+            if (cancelLoading) return;
+            setCancelLoading(true);
             try {
               await api.cancelSOS();
               setIsAlert(false);
@@ -200,13 +205,16 @@ export default function SosSystem({ onTrigger, onCancel, onLog, onError }) {
               if (onLog) onLog("✅ SOS cancelled successfully", "success");
             } catch (err) {
               if (onError) onError(err.message || 'System error: Failed to cancel SOS');
+            } finally {
+              setCancelLoading(false);
             }
           }}
+          disabled={cancelLoading}
           className="cyber-button fade-in"
-          style={{ fontSize: '0.8rem', padding: '0.5rem', marginTop: '1rem' }}
+          style={{ fontSize: '0.8rem', padding: '0.5rem', marginTop: '1rem', cursor: cancelLoading ? 'wait' : 'pointer' }}
         >
           <RefreshCcw size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px' }} />
-          CANCEL SOS
+          {cancelLoading ? 'CANCELLING...' : 'CANCEL SOS'}
         </button>
       )}
 

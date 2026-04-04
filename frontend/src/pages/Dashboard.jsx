@@ -5,11 +5,13 @@ import SosSystem from '../components/SosSystem';
 import ContactsPanel from '../components/ContactsPanel';
 import ActivityLog from '../components/ActivityLog';
 import LocationPanel from '../components/LocationPanel';
+import ToastContainer from '../components/ToastContainer';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [logs, setLogs] = useState([]);
+  const [toasts, setToasts] = useState([]);
   const [systemState, setSystemState] = useState('NORMAL'); // 'NORMAL' | 'ALERT'
 
   useEffect(() => {
@@ -37,9 +39,28 @@ export default function Dashboard() {
     navigate('/auth');
   };
 
+  const addToast = (message, type = 'info') => {
+    const id = Date.now() + Math.random();
+    // Only keep the most recent toast
+    setToasts([{ id, message, type }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
   const addLog = (message, type = 'info') => {
     const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setLogs(prev => [{ id: Date.now() + Math.random(), message, type, timestamp }, ...prev].slice(0, 50));
+
+    if (message === 'SOS TRIGGERED - SEQUENCE INITIATED') {
+      addToast('⚠ SOS Activated', 'danger');
+    } else if (
+      message.includes('Authorities notified') || 
+      message.includes('SOS cancelled')
+    ) {
+      addToast(message, type);
+    }
   };
 
   if (!user) return <div style={{ color: 'var(--neon-blue)', padding: '2rem' }}>Loading system...</div>;
@@ -54,6 +75,7 @@ export default function Dashboard() {
       margin: '0 auto',
       minHeight: '100vh',
     }}>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       
       {/* LEFT COLUMN: Main Interaction */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
