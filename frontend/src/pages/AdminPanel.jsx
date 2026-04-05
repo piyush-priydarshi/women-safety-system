@@ -105,7 +105,7 @@ const AdminPanel = () => {
             <p className="text-dim">NO_USERS_FOUND</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {data.users.map(u => (
+              {data?.users?.map(u => (
                 <div key={u.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-primary)' }}>ID_{u.id} | {u.name}</span>
@@ -129,7 +129,7 @@ const AdminPanel = () => {
             <p className="text-dim">NO_SOS_EVENTS_RECORDED</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {data.sos_events.map(ev => (
+              {data?.sos_events?.map(ev => (
                 <div key={ev.id} style={{ borderLeft: `3px solid ${ev.status === 'active' ? 'var(--danger)' : 'var(--neon-blue)'}`, background: 'rgba(255,0,60,0.05)', padding: '0.75rem', borderRadius: '0 4px 4px 0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: ev.status === 'active' ? 'var(--danger)' : 'var(--neon-blue)', fontWeight: 'bold' }}>
@@ -138,7 +138,7 @@ const AdminPanel = () => {
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>UID_{ev.user_id}</span>
                   </div>
                   <div style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>
-                    {ev.address || `LAT: ${ev.latitude.toFixed(4)}, LNG: ${ev.longitude.toFixed(4)}`}
+                    {ev.address || `LAT: ${ev?.latitude ? ev.latitude.toFixed(4) : "--"}, LNG: ${ev?.longitude ? ev.longitude.toFixed(4) : "--"}`}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
                     TIME: {ev.triggered_at}
@@ -158,7 +158,7 @@ const AdminPanel = () => {
             <p className="text-dim">NO_CONTACTS_FOUND</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {data.contacts.map(c => (
+              {data?.contacts?.map(c => (
                 <div key={c.id} style={{ borderLeft: '2px solid var(--neon-pink)', padding: '0.5rem 0.75rem', background: 'rgba(247,37,133,0.05)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-primary)' }}>{c.name} ({c.relation})</span>

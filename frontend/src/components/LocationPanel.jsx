@@ -117,13 +117,13 @@ export default function LocationPanel() {
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'JetBrains Mono, monospace' }}>
           <span className="text-dim">LAT:</span> 
           <span style={{ transition: 'color 0.3s ease', color: driftDot && status === 'ACTIVE' ? 'var(--text-primary)' : 'var(--neon-blue)' }}>
-            {Math.abs(coords.lat).toFixed(4)}° {coords.lat >= 0 ? 'N' : 'S'}
+            {coords?.lat != null ? Math.abs(coords.lat).toFixed(4) : "--"}° {coords.lat >= 0 ? 'N' : 'S'}
           </span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'JetBrains Mono, monospace' }}>
           <span className="text-dim">LNG:</span> 
           <span style={{ transition: 'color 0.3s ease', color: !driftDot && status === 'ACTIVE' ? 'var(--text-primary)' : 'var(--neon-blue)' }}>
-            {Math.abs(coords.lng).toFixed(4)}° {coords.lng >= 0 ? 'E' : 'W'}
+            {coords?.lng != null ? Math.abs(coords.lng).toFixed(4) : "--"}° {coords.lng >= 0 ? 'E' : 'W'}
           </span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--neon-purple)' }}>
