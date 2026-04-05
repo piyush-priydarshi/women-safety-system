@@ -1,12 +1,22 @@
 from flask import Blueprint, jsonify, current_app
 from database import get_db
+from auth_utils import login_required
+from flask import g
+
+ADMIN_PHONE = "9667938325"
 
 admin_bp = Blueprint('admin', __name__)
 
 @admin_bp.route('/dashboard', methods=['GET'])
+@login_required
 def get_dashboard():
     try:
         db = get_db(current_app)
+        
+        # Check if user is admin
+        user = db.execute("SELECT phone FROM users WHERE id = ?", (g.user_id,)).fetchone()
+        if not user or user['phone'] != ADMIN_PHONE:
+            return jsonify({'error': 'Unauthorized: Admin access denied'}), 403
         
         # Get users
         users_cur = db.execute('SELECT id, name, phone, email, created_at FROM users ORDER BY created_at DESC')

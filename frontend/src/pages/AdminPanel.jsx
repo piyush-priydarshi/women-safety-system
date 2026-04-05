@@ -10,11 +10,16 @@ const AdminPanel = () => {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
+        const token = localStorage.getItem('token');
         const baseUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
-        const response = await fetch(`${baseUrl}/api/admin/dashboard`);
+        const response = await fetch(`${baseUrl}/api/admin/dashboard`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         
         if (!response.ok) {
-          throw new Error('Failed to fetch admin data');
+          throw new Error('Failed to fetch admin data or unauthorized');
         }
         
         const result = await response.json();
