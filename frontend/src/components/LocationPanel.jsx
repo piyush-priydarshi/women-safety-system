@@ -36,7 +36,15 @@ export default function LocationPanel() {
   useEffect(() => {
     let watchId;
     
+    let lastSend = 0;
+    
     const sendLocation = async (lat, lng) => {
+      if (!lat || !lng) return;
+      
+      const now = Date.now();
+      if (now - lastSend < 5000) return; // Throttle API calls to every 5 seconds
+      lastSend = now;
+
       try {
         await api.updateLocation({ lat, lng });
       } catch (err) {
@@ -48,6 +56,7 @@ export default function LocationPanel() {
       // Get initial position quickly
       navigator.geolocation.getCurrentPosition(
         position => {
+          if (!position || !position.coords) return;
           setStatus("ACTIVE");
           setCoords({
             lat: position.coords.latitude,
@@ -64,6 +73,7 @@ export default function LocationPanel() {
       // Watch continuously
       watchId = navigator.geolocation.watchPosition(
         position => {
+          if (!position || !position.coords) return;
           setStatus("ACTIVE");
           setCoords({
             lat: position.coords.latitude,
@@ -74,6 +84,9 @@ export default function LocationPanel() {
         error => {
           setStatus("NO SIGNAL");
           console.error("Geolocation watch error:", error);
+          if (watchId !== undefined) {
+             navigator.geolocation.clearWatch(watchId);
+          }
         },
         { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
       );
