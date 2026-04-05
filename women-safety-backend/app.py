@@ -6,6 +6,7 @@ from routes.contacts import contacts_bp
 from routes.sos import sos_bp
 from routes.location import location_bp
 from routes.alerts import alerts_bp
+from routes.admin import admin_bp
 
 
 def create_app():
@@ -23,6 +24,7 @@ def create_app():
     app.register_blueprint(sos_bp,       url_prefix='/api/sos')
     app.register_blueprint(location_bp,  url_prefix='/api/location')
     app.register_blueprint(alerts_bp,    url_prefix='/api/alerts')
+    app.register_blueprint(admin_bp,     url_prefix='/api/admin')
 
     @app.route('/')
     def index():
@@ -49,6 +51,7 @@ from routes.contacts import contacts_bp
 from routes.sos import sos_bp
 from routes.location import location_bp
 from routes.alerts import alerts_bp
+from routes.admin import admin_bp
 
 
 def create_app():
@@ -66,6 +69,7 @@ def create_app():
     app.register_blueprint(sos_bp,       url_prefix='/api/sos')
     app.register_blueprint(location_bp,  url_prefix='/api/location')
     app.register_blueprint(alerts_bp,    url_prefix='/api/alerts')
+    app.register_blueprint(admin_bp,     url_prefix='/api/admin')
 
     @app.route('/')
     def index():
