@@ -39,7 +39,10 @@ export default function LocationPanel() {
     let lastSend = 0;
     
     const sendLocation = async (lat, lng) => {
-      if (!lat || !lng) return;
+      if (!lat || !lng) {
+        console.warn("Invalid location, skipping update");
+        return;
+      }
       
       const now = Date.now();
       if (now - lastSend < 5000) return; // Throttle API calls to every 5 seconds
@@ -56,39 +59,41 @@ export default function LocationPanel() {
       // Get initial position quickly
       navigator.geolocation.getCurrentPosition(
         position => {
-          if (!position || !position.coords) return;
+          const lat = position?.coords?.latitude;
+          const lng = position?.coords?.longitude;
+          if (!lat || !lng) return;
+          
           setStatus("ACTIVE");
-          setCoords({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          sendLocation(position.coords.latitude, position.coords.longitude);
+          setCoords({ lat, lng });
+          sendLocation(lat, lng);
         },
         error => {
           setStatus("NO SIGNAL");
-          console.error("Geolocation error:", error);
+          console.error("Geolocation error:", error.message);
+          return;
         }
       );
 
       // Watch continuously
       watchId = navigator.geolocation.watchPosition(
         position => {
-          if (!position || !position.coords) return;
+          const lat = position?.coords?.latitude;
+          const lng = position?.coords?.longitude;
+          if (!lat || !lng) return;
+          
           setStatus("ACTIVE");
-          setCoords({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          sendLocation(position.coords.latitude, position.coords.longitude);
+          setCoords({ lat, lng });
+          sendLocation(lat, lng);
         },
         error => {
           setStatus("NO SIGNAL");
-          console.error("Geolocation watch error:", error);
+          console.error("Geolocation watch error:", error.message);
           if (watchId !== undefined) {
              navigator.geolocation.clearWatch(watchId);
           }
+          return;
         },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
       setStatus("NO SIGNAL");
