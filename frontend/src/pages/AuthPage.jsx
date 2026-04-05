@@ -32,6 +32,7 @@ export default function AuthPage() {
       }
 
       // Store token and user data locally
+      localStorage.clear();
       localStorage.setItem('token', res.token);
       if (res.user) {
         localStorage.setItem('user', JSON.stringify(res.user));

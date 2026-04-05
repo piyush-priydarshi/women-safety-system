@@ -11,12 +11,22 @@ const AdminPanel = () => {
     const fetchAdminData = async () => {
       try {
         const token = localStorage.getItem('token');
+        const userRaw = localStorage.getItem('user');
+
+        if (!token || !userRaw) {
+          throw new Error('Unauthorized - Please login again');
+        }
+
         const baseUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
         const response = await fetch(`${baseUrl}/api/admin/dashboard`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
+        
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Unauthorized - Please login again');
+        }
         
         if (!response.ok) {
           throw new Error('Access Denied or Failed to Load');
@@ -52,6 +62,21 @@ const AdminPanel = () => {
         <div className="terminal-card terminal-card-danger" style={{ maxWidth: '600px', margin: '4rem auto', textAlign: 'center' }}>
           <h2 className="text-danger">[!] ERROR_ACCESS_DENIED</h2>
           <p style={{ margin: '1rem 0' }}>{error}</p>
+          <button className="cyber-button" style={{ marginTop: '1rem' }} onClick={() => window.close() || navigate('/')}>
+            RETURN_TO_BASE
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Prevent blank screen by enforcing base level safety checks
+  if (!data || !data.users || !data.contacts || !data.sos_events) {
+    return (
+      <div className="dashboard-wrapper">
+        <div className="terminal-card terminal-card-danger" style={{ maxWidth: '600px', margin: '4rem auto', textAlign: 'center' }}>
+          <h2 className="text-danger">[!] ERROR_DATA_CORRUPTION</h2>
+          <p style={{ margin: '1rem 0' }}>The system failed to retrieve valid properties.</p>
           <button className="cyber-button" style={{ marginTop: '1rem' }} onClick={() => window.close() || navigate('/')}>
             RETURN_TO_BASE
           </button>
