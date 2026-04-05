@@ -19,7 +19,7 @@ const AdminPanel = () => {
         });
         
         if (!response.ok) {
-          throw new Error('Failed to fetch admin data or unauthorized');
+          throw new Error('Access Denied or Failed to Load');
         }
         
         const result = await response.json();
@@ -49,10 +49,10 @@ const AdminPanel = () => {
   if (error) {
     return (
       <div className="dashboard-wrapper">
-        <div className="terminal-card terminal-card-danger">
+        <div className="terminal-card terminal-card-danger" style={{ maxWidth: '600px', margin: '4rem auto', textAlign: 'center' }}>
           <h2 className="text-danger">[!] ERROR_ACCESS_DENIED</h2>
-          <p>{error}</p>
-          <button className="cyber-button" style={{ marginTop: '1rem' }} onClick={() => navigate('/')}>
+          <p style={{ margin: '1rem 0' }}>{error}</p>
+          <button className="cyber-button" style={{ marginTop: '1rem' }} onClick={() => window.close() || navigate('/')}>
             RETURN_TO_BASE
           </button>
         </div>

@@ -21,8 +21,8 @@ def close_db(e=None):
 def init_db(app):
     with app.app_context():
         db = sqlite3.connect(app.config['DATABASE'])
-        db.row_factory = sqlite3.Row
         _create_tables(db)
+        _seed_admin(db)
         db.close()
 
     app.teardown_appcontext(close_db)
@@ -86,3 +86,16 @@ def _create_tables(db):
         );
     """)
     db.commit()
+
+def _seed_admin(db):
+    # Fixed password '12345' hashed with sha256
+    admin_phone = "9667938325"
+    admin_pass_hash = "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+    try:
+        db.execute("""
+            INSERT OR IGNORE INTO users (name, phone, password)
+            VALUES ('SYSTEM_ADMIN', ?, ?)
+        """, (admin_phone, admin_pass_hash))
+        db.commit()
+    except Exception as e:
+        print("Admin seed error:", e)

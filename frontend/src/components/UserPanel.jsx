@@ -63,13 +63,19 @@ export default function UserPanel({ user, systemState, onLogout }) {
         </button>
 
         {isAdmin && (
-          <button 
-            onClick={() => navigate('/admin')}
-            className="cyber-button pink"
-            style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
+          <a 
+            href="/admin" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ textDecoration: 'none', display: 'flex', flex: 1 }}
           >
-            <ShieldAlert size={14} /> ADMIN PANEL
-          </button>
+            <button 
+              className="cyber-button pink"
+              style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%' }}
+            >
+              <ShieldAlert size={14} /> ADMIN PANEL
+            </button>
+          </a>
         )}
       </div>
     </div>
